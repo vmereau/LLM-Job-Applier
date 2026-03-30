@@ -9,10 +9,10 @@ export default function Home() {
           Votre assistant personnel pour trouver des offres d&apos;emploi adaptées à votre profil.
         </p>
         <Link
-          href="/profile"
+          href="/profiles"
           className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
         >
-          Gérer mon profil →
+          Gérer mes profils →
         </Link>
       </div>
     </div>

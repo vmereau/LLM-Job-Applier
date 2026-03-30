@@ -18,6 +18,7 @@ model Profile {
   skills      String[]
   languages   String[]
   linkedinUrl String?
+  isActive    Boolean      @default(false)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   experiences Experience[]

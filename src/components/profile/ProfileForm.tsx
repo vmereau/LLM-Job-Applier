@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Experience = {
   _id: string;
@@ -38,9 +39,11 @@ type ProfileData = {
 
 type Props = {
   initialData: ProfileData | null;
+  profileId: string | null;
 };
 
-export default function ProfileForm({ initialData }: Props) {
+export default function ProfileForm({ initialData, profileId }: Props) {
+  const router = useRouter();
   const empty: ProfileData = {
     name: "",
     email: "",
@@ -129,13 +132,19 @@ export default function ProfileForm({ initialData }: Props) {
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/profile", {
-        method: "PUT",
+      const url = profileId ? `/api/profiles/${profileId}` : "/api/profiles";
+      const method = profileId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (res.ok) {
-        setMessage({ type: "success", text: "Profil sauvegardé avec succès !" });
+        if (!profileId) {
+          router.push("/profiles");
+        } else {
+          setMessage({ type: "success", text: "Profil sauvegardé avec succès !" });
+        }
       } else {
         const err = await res.json();
         setMessage({ type: "error", text: err.error ?? "Erreur lors de la sauvegarde" });
