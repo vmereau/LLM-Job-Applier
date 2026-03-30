@@ -16,12 +16,29 @@ _Généré le 2026-03-30. Ces objectifs seront traités dans des sprints ultéri
 
 ---
 
+## Objectif 1b — Multi-profils
+
+**Description :** Évolution de la gestion du profil vers un système multi-profils. L'utilisateur peut créer, nommer et gérer plusieurs profils distincts (ex : "Profil Dev Backend", "Profil Data Scientist"). Un sélecteur de profil actif est présent dans la navigation.
+
+**Changements par rapport à l'Objectif 1 :**
+- Schéma : `Profile` passe de mono à multi — supprimer la contrainte de profil unique, ajouter un champ `isActive Boolean @default(false)` ou gérer la sélection via une table de préférence utilisateur.
+- API : `GET /api/profile` → `GET /api/profiles` (liste) + `GET /api/profiles/[id]` (détail) ; `PUT /api/profiles/[id]` ; `POST /api/profiles` (créer) ; `DELETE /api/profiles/[id]`.
+- API : `PUT /api/profiles/[id]/activate` — marque un profil comme actif (un seul à la fois).
+- UI : page `/profiles` liste tous les profils avec bouton "Activer" et bouton "Éditer" ; le profil actif est mis en évidence.
+- Commande `/import-profile` : accepte un argument `--profile <id>` optionnel pour cibler un profil existant ; sans argument, crée un nouveau profil.
+- Migration Prisma : `prisma migrate dev` pour passer du schéma mono au schéma multi.
+
+**Dépendance :** Objectif 1 complété.
+
+---
+
 ## Objectif 2 — Recherche d'emploi IA
 
-**Description :** Commande Claude qui parcourt le web en fonction du profil utilisateur et de critères spécifiques (lieu, salaire, mots-clés). Trouve des offres d'emploi correspondantes et les enregistre en base de données PostgreSQL.
+**Description :** Commande Claude qui parcourt le web en fonction d'un profil sélectionné et de critères spécifiques (lieu, salaire, mots-clés). Trouve des offres d'emploi correspondantes et les enregistre en base de données PostgreSQL, associées au profil ayant lancé la recherche.
 
 **Structure d'une offre d'emploi :**
 - id (UUID)
+- profileId (FK → Profile — profil ayant généré cette recherche)
 - titre
 - entreprise
 - salaire (min/max)
@@ -32,22 +49,25 @@ _Généré le 2026-03-30. Ces objectifs seront traités dans des sprints ultéri
 - date_trouvee
 - statut (nouveau, vu, répondu, ignoré)
 
-**Dépendance :** Objectif 1 (infra + profil) complété.
+**Commande `/search-jobs` :** accepte un argument `--profile <id>` (ou utilise le profil actif par défaut) + critères libres (lieu, salaire, mots-clés). Retourne les offres trouvées et les sauvegarde en DB liées au profil.
+
+**Dépendance :** Objectifs 1 et 1b complétés.
 
 ---
 
 ## Objectif 3 — Interface offres d'emploi
 
-**Description :** Page liste affichant les offres trouvées avec tri et filtre selon la structure définie (titre, entreprise, salaire, lieu, mots-clés, statut). Page détail par offre avec :
+**Description :** Page liste affichant les offres trouvées avec tri et filtre selon la structure définie (titre, entreprise, salaire, lieu, mots-clés, statut). Filtre supplémentaire par profil (afficher les offres d'un profil spécifique ou de tous les profils). Page détail par offre avec :
 - Toggle "J'ai répondu à cette annonce"
 - Espace de notes libres lié à l'annonce
+- Indication du profil associé à l'offre
 
-**Dépendance :** Objectifs 1 et 2 complétés.
+**Dépendance :** Objectifs 1, 1b et 2 complétés.
 
 ---
 
 ## Objectif 4 — Lettre de motivation IA
 
-**Description :** Commande Claude qui récupère une offre spécifique en BDD et génère une lettre de motivation adaptée au profil utilisateur. La lettre s'affiche dans la page dédiée à l'annonce, est éditable dans l'interface, et téléchargeable au format PDF.
+**Description :** Commande Claude qui récupère une offre spécifique en BDD et génère une lettre de motivation adaptée au profil associé à cette offre (ou au profil actif si différent). La lettre s'affiche dans la page dédiée à l'annonce, est éditable dans l'interface, et téléchargeable au format PDF.
 
-**Dépendance :** Objectifs 1, 2 et 3 complétés.
+**Dépendance :** Objectifs 1, 1b, 2 et 3 complétés.

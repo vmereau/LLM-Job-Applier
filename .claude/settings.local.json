@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Bash(done)",
+      "WebFetch(domain:www.linkedin.com)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
