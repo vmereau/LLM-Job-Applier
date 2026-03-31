@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const profileId = searchParams.get("profileId") ?? undefined;
     const jobOffers = await prisma.jobOffer.findMany({
+      where: profileId ? { profileId } : undefined,
       include: { profile: { select: { name: true } } },
       orderBy: { date_trouvee: "desc" },
     });
