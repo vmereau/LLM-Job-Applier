@@ -5,7 +5,22 @@
       "Bash(do echo:*)",
       "Bash(done)",
       "WebFetch(domain:www.linkedin.com)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:localhost)",
+      "WebSearch",
+      "WebFetch(domain:www.welcometothejungle.com)",
+      "WebFetch(domain:fr.linkedin.com)",
+      "WebFetch(domain:candidat.francetravail.fr)",
+      "WebFetch(domain:www.glassdoor.fr)",
+      "WebFetch(domain:asitix.fr)",
+      "WebFetch(domain:jobs.smile.eu)",
+      "WebFetch(domain:welovedevs.com)",
+      "WebFetch(domain:www.proxiad.com)",
+      "WebFetch(domain:fr.jooble.org)",
+      "WebFetch(domain:www.emplois-informatique.fr)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

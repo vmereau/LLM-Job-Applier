@@ -45,13 +45,7 @@ Pas de parsing strict — interpréter en langage naturel.
 
 ## Étape 4 — Recherche web
 
-Utiliser l'outil `WebSearch` pour chercher des offres d'emploi correspondant au profil + critères.
-
-Requêtes suggérées (adapter selon les critères) :
-- `offres emploi <métier> <lieu> site:linkedin.com OR site:welcometothejungle.com OR site:indeed.fr`
-- `<métier> <lieu> CDI OR CDD recrutement <année courante>`
-
-Collecter entre 3 et 10 offres pertinentes. Pour chaque offre, extraire :
+Objectif : collecter entre 5 et 15 offres pertinentes en deux phases ordonnées. Pour chaque offre, extraire :
 - `titre` — intitulé du poste
 - `entreprise` — nom de l'entreprise
 - `lieu` — localisation
@@ -59,6 +53,46 @@ Collecter entre 3 et 10 offres pertinentes. Pour chaque offre, extraire :
 - `lien` — URL de l'annonce
 - `mots_cles` — tableau de mots-clés pertinents extraits de l'annonce
 - `salaire_min` / `salaire_max` — en euros annuels bruts (entiers), si mentionnés ; sinon omettre
+
+### Phase 4a — Pages carrières des entreprises (priorité)
+
+**4a.1 — Identifier les entreprises cibles**
+
+Utiliser `WebSearch` pour identifier les entreprises connues pour recruter sur ce métier/secteur. Requête suggérée :
+- `entreprises qui recrutent <métier> <lieu> <année courante>`
+- `top entreprises <secteur> France recrutement <métier>`
+
+Constituer une liste de 5 à 10 entreprises pertinentes.
+
+**4a.2 — Chercher directement sur leurs pages carrières**
+
+Pour chaque entreprise identifiée, chercher les offres sur leur site propre. Requêtes suggérées :
+- `site:<domaine-entreprise> <métier> <lieu>` (ex: `site:datadog.com software engineer`)
+- `<entreprise> careers <métier> <lieu>`
+- `<entreprise> /jobs OR /careers OR /recrutement <métier>`
+
+Utiliser `WebFetch` si une URL de page carrière est trouvée pour extraire les offres directement depuis la source.
+
+Collecter toutes les offres trouvées sur les sites des entreprises.
+
+### Phase 4b — Jobboards (complément)
+
+Si le total d'offres collectées en phase 4a est inférieur à 5, compléter avec les jobboards. Requêtes suggérées :
+- `offres emploi <métier> <lieu> site:welcometothejungle.com`
+- `offres emploi <métier> <lieu> site:linkedin.com/jobs`
+- `offres emploi <métier> <lieu> site:indeed.fr`
+- `<métier> <lieu> CDI OR CDD recrutement <année courante>`
+
+Éviter les doublons avec les offres déjà trouvées en phase 4a (même entreprise + même poste).
+
+## Étape 4c — Normaliser le texte extrait
+
+Avant de sauvegarder, corriger les problèmes d'encodage dus aux pages en ISO-8859-1 :
+
+- Si du texte contient le caractère de remplacement Unicode `U+FFFD` (affiché `?` ou `<?>` ou `â€`) → reconstruire les mots corrects à partir du contexte français.
+  - Exemples : `D<?>veloppeur` → `Développeur`, `ingâ€<?>nieur` → `ingénieur`, `rÃ©` → `ré`
+- Appliquer cette correction à tous les champs : `titre`, `entreprise`, `lieu`, `description`, `mots_cles`.
+- En cas de doute sur un caractère, préférer la version française la plus probable.
 
 ## Étape 5 — Sauvegarder les offres
 
