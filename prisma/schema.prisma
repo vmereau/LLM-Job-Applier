@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum StatutOffre {
+  nouveau
+  vu
+  repondu
+  ignore
+}
+
 model Profile {
   id          String       @id @default(uuid())
   name        String
@@ -23,6 +30,23 @@ model Profile {
   updatedAt   DateTime     @updatedAt
   experiences Experience[]
   education   Education[]
+  jobOffers   JobOffer[]
+}
+
+model JobOffer {
+  id           String      @id @default(uuid())
+  profileId    String
+  profile      Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  titre        String
+  entreprise   String
+  salaire_min  Int?
+  salaire_max  Int?
+  lieu         String
+  mots_cles    String[]
+  description  String
+  lien         String
+  date_trouvee DateTime    @default(now())
+  statut       StatutOffre @default(nouveau)
 }
 
 model Experience {

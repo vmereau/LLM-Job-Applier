@@ -4,6 +4,13 @@ _Généré le 2026-03-30. Ces objectifs seront traités dans des sprints ultéri
 
 ---
 
+## Review findings — Objectif 2 (spec-2-search-jobs) — à traiter ultérieurement
+
+- **Validation salaire** : pas de vérification que `salaire_min <= salaire_max` ni rejet des valeurs négatives dans `POST /api/job-offers`. À ajouter si la cohérence des données devient critique.
+- **Validation URL `lien`** : le champ est validé non-vide mais pas comme URL valide — des liens malformés peuvent être enregistrés.
+
+---
+
 ## Findings de review — à traiter ultérieurement (prototype local)
 
 - **Dockerfile dev CMD** : `CMD ["npm", "run", "dev"]` — acceptable pour prototype local, à remplacer par multi-stage build + `npm start` avant tout déploiement.
@@ -34,7 +41,7 @@ _Généré le 2026-03-30. Ces objectifs seront traités dans des sprints ultéri
 
 ## Objectif 2 — Recherche d'emploi IA
 
-**Description :** Commande Claude qui parcourt le web en fonction d'un profil sélectionné et de critères spécifiques (lieu, salaire, mots-clés). Trouve des offres d'emploi correspondantes et les enregistre en base de données PostgreSQL, associées au profil ayant lancé la recherche.
+**Description :** Skill Claude Code (`/search-jobs`) qui parcourt le web en fonction d'un profil sélectionné et de critères spécifiques (lieu, salaire, mots-clés). Claude effectue lui-même la recherche et insère les offres directement en base de données via Prisma — aucun SDK Anthropic n'est embarqué dans l'application.
 
 **Structure d'une offre d'emploi :**
 - id (UUID)
@@ -49,7 +56,7 @@ _Généré le 2026-03-30. Ces objectifs seront traités dans des sprints ultéri
 - date_trouvee
 - statut (nouveau, vu, répondu, ignoré)
 
-**Commande `/search-jobs` :** accepte un argument `--profile <id>` (ou utilise le profil actif par défaut) + critères libres (lieu, salaire, mots-clés). Retourne les offres trouvées et les sauvegarde en DB liées au profil.
+**Skill `/search-jobs` (Claude Code) :** accepte un argument `--profile <id>` (ou utilise le profil actif par défaut) + critères libres (lieu, salaire, mots-clés). Claude effectue la recherche web, génère les données structurées et les insère directement en DB via l'API REST de l'application ou Prisma.
 
 **Dépendance :** Objectifs 1 et 1b complétés.
 

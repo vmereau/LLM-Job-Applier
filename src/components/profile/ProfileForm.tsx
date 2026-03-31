@@ -4,35 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Experience = {
-  _id: string;
+  _id?: string;
   company: string;
   role: string;
-  location?: string;
+  location?: string | null;
   startDate: string;
-  endDate?: string;
-  description?: string;
+  endDate?: string | null;
+  description?: string | null;
 };
 
 type EducationItem = {
-  _id: string;
+  _id?: string;
   institution: string;
-  degree?: string;
-  field?: string;
-  startDate?: string;
-  endDate?: string;
-  description?: string;
+  degree?: string | null;
+  field?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  description?: string | null;
 };
 
 type ProfileData = {
   name: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  title?: string;
-  summary?: string;
+  email?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  title?: string | null;
+  summary?: string | null;
   skills: string[];
   languages: string[];
-  linkedinUrl?: string;
+  linkedinUrl?: string | null;
   experiences: Experience[];
   education: EducationItem[];
 };

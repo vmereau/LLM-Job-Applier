@@ -1,0 +1,109 @@
+# Skill : /search-jobs
+
+Recherche des offres d'emploi sur le web en fonction d'un profil utilisateur et de critères libres, puis les sauvegarde en base de données via l'API REST de l'application.
+
+## Déclenchement
+
+Ce skill est invoqué par la commande `/search-jobs` suivie de critères libres en langage naturel.
+
+Exemples :
+```
+/search-jobs développeur TypeScript Paris 50k
+/search-jobs --profile abc-123 data scientist remote 60k-80k
+/search-jobs ingénieur backend Node.js Lyon CDI
+```
+
+## Étape 1 — Vérifier que l'app est disponible
+
+Faire un `GET http://localhost:3000/api/profiles` (sans suivre de redirect).
+
+- Si la requête échoue ou timeout → **HALT** : afficher "L'application n'est pas disponible sur localhost:3000. Lancez `npm run dev` ou `docker compose up -d` avant de relancer cette commande."
+- Si succès → continuer.
+
+## Étape 2 — Résoudre le profil cible
+
+**Si `--profile <id>` est présent dans les arguments :**
+- Faire `GET http://localhost:3000/api/profiles/<id>`.
+- Si 404 ou erreur → **HALT** : afficher "Profil <id> introuvable."
+- Sinon → utiliser ce profil.
+
+**Sinon :**
+- Utiliser la réponse de l'étape 1 (`GET /api/profiles`).
+- Trouver le profil où `isActive === true`.
+- Si aucun profil actif → **HALT** : afficher "Aucun profil actif trouvé. Activez un profil depuis /profiles ou précisez `--profile <id>`."
+- Sinon → utiliser ce profil.
+
+## Étape 3 — Extraire les critères de recherche
+
+À partir des arguments passés au skill (hors `--profile <id>`), identifier librement :
+- **Mots-clés / métier** (ex : "développeur TypeScript", "data scientist")
+- **Lieu** (ex : "Paris", "Lyon", "remote", "télétravail")
+- **Salaire** (ex : "50k", "60k-80k", "45000€")
+- Tout autre critère pertinent
+
+Pas de parsing strict — interpréter en langage naturel.
+
+## Étape 4 — Recherche web
+
+Utiliser l'outil `WebSearch` pour chercher des offres d'emploi correspondant au profil + critères.
+
+Requêtes suggérées (adapter selon les critères) :
+- `offres emploi <métier> <lieu> site:linkedin.com OR site:welcometothejungle.com OR site:indeed.fr`
+- `<métier> <lieu> CDI OR CDD recrutement <année courante>`
+
+Collecter entre 3 et 10 offres pertinentes. Pour chaque offre, extraire :
+- `titre` — intitulé du poste
+- `entreprise` — nom de l'entreprise
+- `lieu` — localisation
+- `description` — résumé de l'annonce (2-4 phrases)
+- `lien` — URL de l'annonce
+- `mots_cles` — tableau de mots-clés pertinents extraits de l'annonce
+- `salaire_min` / `salaire_max` — en euros annuels bruts (entiers), si mentionnés ; sinon omettre
+
+## Étape 5 — Sauvegarder les offres
+
+Pour chaque offre collectée, faire :
+
+```
+POST http://localhost:3000/api/job-offers
+Content-Type: application/json
+
+{
+  "profileId": "<id du profil résolu à l'étape 2>",
+  "titre": "...",
+  "entreprise": "...",
+  "lieu": "...",
+  "description": "...",
+  "lien": "...",
+  "mots_cles": [...],
+  "salaire_min": 50000,   // optionnel
+  "salaire_max": 65000    // optionnel
+}
+```
+
+Si une requête POST échoue (status != 201), noter l'erreur mais continuer avec les offres suivantes.
+
+## Étape 6 — Afficher le résumé
+
+Calculer `n` = nombre d'offres sauvegardées avec succès.
+
+**Si n = 0 :**
+```
+Aucune offre trouvée pour ces critères.
+```
+
+**Si 1 ≤ n ≤ 10 :**
+```
+<n> offre(s) sauvegardée(s) pour le profil "<nom du profil>".
+
+1. <titre> — <entreprise> (<lieu>)
+2. <titre> — <entreprise> (<lieu>)
+...
+```
+
+**Si n > 10 :**
+```
+<n> offres sauvegardées pour le profil "<nom du profil>".
+```
+
+Si des erreurs d'insertion se sont produites, les mentionner brièvement à la fin.

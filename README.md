@@ -50,7 +50,6 @@ cp .env.example .env.local
 
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jobapplier
-ANTHROPIC_API_KEY=sk-ant-...   # optionnel pour l'instant
 ```
 
 ### 3. Installer les dépendances
