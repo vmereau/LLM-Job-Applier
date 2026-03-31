@@ -19,6 +19,7 @@ type JobOffer = {
   date_trouvee: string;
   statut: StatutOffre;
   notes: string | null;
+  lettreMotivation: string | null;
   profile: { id: string; name: string };
 };
 
@@ -45,7 +46,12 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
   const [toggleLoading, setToggleLoading] = useState(false);
   const [notesSaving, setNotesSaving] = useState(false);
 
-  async function patch(data: Partial<{ statut: StatutOffre; notes: string }>) {
+  const [lettre, setLettre] = useState(initial.lettreMotivation ?? "");
+  const [lettreSaved, setLettreSaved] = useState(false);
+  const [lettreError, setLettreError] = useState("");
+  const [lettreSaving, setLettreSaving] = useState(false);
+
+  async function patch(data: Partial<{ statut: StatutOffre; notes: string; lettreMotivation: string | null }>) {
     const res = await fetch(`/api/job-offers/${offer.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -86,6 +92,47 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
       setNotesError((e as Error).message);
     } finally {
       setNotesSaving(false);
+    }
+  }
+
+  async function handleSaveLettre() {
+    setLettreError("");
+    setLettreSaved(false);
+    setLettreSaving(true);
+    try {
+      const updated = await patch({ lettreMotivation: lettre || null });
+      setOffer(updated);
+      setLettre(updated.lettreMotivation ?? "");
+      setLettreSaved(true);
+      setTimeout(() => setLettreSaved(false), 2500);
+    } catch (e) {
+      setLettreError((e as Error).message);
+    } finally {
+      setLettreSaving(false);
+    }
+  }
+
+  async function handleDownloadPdf() {
+    if (!lettre) return;
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      doc.setFont("helvetica");
+      doc.setFontSize(11);
+      const lines = doc.splitTextToSize(lettre, 170);
+      let y = 20;
+      for (const line of lines as string[]) {
+        if (y > 265) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(line, 20, y);
+        y += 6;
+      }
+      const slug = offer.entreprise.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      doc.save(`lettre-${slug}.pdf`);
+    } catch {
+      setLettreError("Erreur lors de la génération du PDF.");
     }
   }
 
@@ -182,7 +229,7 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
       </div>
 
       {/* Notes */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
         <p className="font-medium text-gray-900 mb-3">Notes</p>
         <textarea
           value={notes}
@@ -203,6 +250,40 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
           >
             {notesSaving ? "Sauvegarde…" : "Sauvegarder"}
           </button>
+        </div>
+      </div>
+
+      {/* Lettre de motivation */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <p className="font-medium text-gray-900 mb-3">Lettre de motivation</p>
+        <textarea
+          value={lettre}
+          onChange={(e) => { setLettre(e.target.value); setLettreSaved(false); }}
+          rows={12}
+          placeholder="La lettre de motivation apparaîtra ici après génération via /generate-cover-letter…"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+        />
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-gray-400">
+            {lettreSaved ? "✓ Lettre sauvegardée" : ""}
+            {lettreError && <span className="text-red-600">{lettreError}</span>}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={!lettre}
+              className="px-4 py-1.5 text-sm rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:bg-gray-100"
+            >
+              Télécharger PDF
+            </button>
+            <button
+              onClick={handleSaveLettre}
+              disabled={lettreSaving || lettre === ""}
+              className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {lettreSaving ? "Sauvegarde…" : "Sauvegarder"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

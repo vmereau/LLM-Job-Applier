@@ -47,7 +47,8 @@ model JobOffer {
   lien         String
   date_trouvee DateTime    @default(now())
   statut       StatutOffre @default(nouveau)
-  notes        String?
+  notes            String?
+  lettreMotivation String?
 }
 
 model Experience {

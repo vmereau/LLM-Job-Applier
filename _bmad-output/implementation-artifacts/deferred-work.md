@@ -73,8 +73,8 @@ _Généré le 2026-03-30. Ces objectifs seront traités dans des sprints ultéri
 
 ---
 
-## Objectif 4 — Lettre de motivation IA
+## Review findings — Objectif 4 (spec-4-lettre-motivation-ia) — à traiter ultérieurement
 
-**Description :** Commande Claude qui récupère une offre spécifique en BDD et génère une lettre de motivation adaptée au profil associé à cette offre (ou au profil actif si différent). La lettre s'affiche dans la page dédiée à l'annonce, est éditable dans l'interface, et téléchargeable au format PDF.
-
-**Dépendance :** Objectifs 1, 1b, 2 et 3 complétés.
+- **Skill `/generate-cover-letter` écrase silencieusement** : si l'utilisateur a édité manuellement sa lettre et l'a sauvegardée, relancer le skill remplace la lettre sans avertissement. À corriger avec une invite de confirmation (`lettreMotivation` déjà présente → demander confirmation avant d'écraser).
+- **Pas de validation de longueur sur `lettreMotivation`** : le champ est `TEXT` sans contrainte. Une lettre pathologiquement longue (bug de génération, appel API direct) serait stockée et rendue sans limite. Ajouter une validation max (ex. 10 000 caractères) si le volume devient problématique.
+- **Cast `statut as StatutOffre` pré-existant** : le PATCH valide `statut` contre l'enum mais utilise un cast TypeScript sans re-vérification en aval — pattern pré-existant non introduit par cet objectif, à refactoriser si l'API s'ouvre à des clients externes.
