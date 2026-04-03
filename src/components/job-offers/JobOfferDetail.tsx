@@ -18,6 +18,7 @@ type JobOffer = {
   lien: string;
   date_trouvee: string;
   statut: StatutOffre;
+  favori: boolean;
   notes: string | null;
   lettreMotivation: string | null;
   profile: { id: string; name: string };
@@ -44,6 +45,8 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
   const [notesError, setNotesError] = useState("");
   const [toggleError, setToggleError] = useState("");
   const [toggleLoading, setToggleLoading] = useState(false);
+  const [favoriLoading, setFavoriLoading] = useState(false);
+  const [favoriError, setFavoriError] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
 
   const [lettre, setLettre] = useState(initial.lettreMotivation ?? "");
@@ -51,7 +54,7 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
   const [lettreError, setLettreError] = useState("");
   const [lettreSaving, setLettreSaving] = useState(false);
 
-  async function patch(data: Partial<{ statut: StatutOffre; notes: string; lettreMotivation: string | null }>) {
+  async function patch(data: Partial<{ statut: StatutOffre; favori: boolean; notes: string; lettreMotivation: string | null }>) {
     const res = await fetch(`/api/job-offers/${offer.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -63,6 +66,19 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
     }
     const json = await res.json();
     return json.jobOffer as JobOffer;
+  }
+
+  async function handleToggleFavori() {
+    setFavoriError("");
+    setFavoriLoading(true);
+    try {
+      const updated = await patch({ favori: !offer.favori });
+      setOffer(updated);
+    } catch (e) {
+      setFavoriError((e as Error).message);
+    } finally {
+      setFavoriLoading(false);
+    }
   }
 
   async function handleToggleRepondu() {
@@ -147,10 +163,26 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
         {/* En-tête */}
         <div className="flex items-start justify-between gap-3 mb-1">
           <h1 className="text-xl font-bold text-gray-900">{offer.titre}</h1>
-          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${STATUT_COLORS[offer.statut]}`}>
-            {STATUT_LABELS[offer.statut]}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleToggleFavori}
+              disabled={favoriLoading}
+              aria-label={offer.favori ? "Retirer des favoris" : "Ajouter aux favoris"}
+              aria-pressed={offer.favori}
+              className={`text-xl leading-none transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                offer.favori
+                  ? "text-yellow-500 hover:text-yellow-600"
+                  : "text-gray-400 hover:text-yellow-400"
+              }`}
+            >
+              <span aria-hidden="true">{offer.favori ? "★" : "☆"}</span>
+            </button>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUT_COLORS[offer.statut]}`}>
+              {STATUT_LABELS[offer.statut]}
+            </span>
+          </div>
         </div>
+        {favoriError && <p className="text-red-600 text-xs mb-1">{favoriError}</p>}
         <p className="text-gray-600 mb-1">
           {offer.entreprise} · {offer.lieu}
         </p>

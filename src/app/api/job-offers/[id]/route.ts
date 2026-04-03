@@ -35,7 +35,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Corps de requête JSON invalide" }, { status: 400 });
   }
 
-  const { statut, notes, lettreMotivation } = body as Record<string, unknown>;
+  const { statut, notes, lettreMotivation, favori } = body as Record<string, unknown>;
 
   if (statut !== undefined && (typeof statut !== "string" || !STATUTS_VALIDES.includes(statut))) {
     return NextResponse.json(
@@ -44,10 +44,15 @@ export async function PATCH(
     );
   }
 
-  const data: { statut?: StatutOffre; notes?: string | null; lettreMotivation?: string | null } = {};
+  if (favori !== undefined && typeof favori !== "boolean") {
+    return NextResponse.json({ error: "Le champ favori doit être un booléen" }, { status: 400 });
+  }
+
+  const data: { statut?: StatutOffre; notes?: string | null; lettreMotivation?: string | null; favori?: boolean } = {};
   if (statut !== undefined) data.statut = statut as StatutOffre;
   if (notes !== undefined) data.notes = typeof notes === "string" ? notes : null;
   if (lettreMotivation !== undefined) data.lettreMotivation = typeof lettreMotivation === "string" ? lettreMotivation : null;
+  if (favori !== undefined) data.favori = favori as boolean;
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Aucun champ à mettre à jour" }, { status: 400 });

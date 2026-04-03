@@ -18,6 +18,7 @@ type JobOffer = {
   lien: string;
   date_trouvee: string;
   statut: StatutOffre;
+  favori: boolean;
   notes: string | null;
   profile: { name: string };
 };
@@ -51,10 +52,12 @@ export default function JobOfferList({
   const [filterStatut, setFilterStatut] = useState<StatutOffre | "">("");
   const [filterProfile, setFilterProfile] = useState("");
   const [filterText, setFilterText] = useState("");
+  const [filterFavoris, setFilterFavoris] = useState(false);
 
   const filtered = jobOffers.filter((o) => {
     if (filterStatut && o.statut !== filterStatut) return false;
     if (filterProfile && o.profileId !== filterProfile) return false;
+    if (filterFavoris && !o.favori) return false;
     if (filterText) {
       const q = filterText.toLowerCase();
       const match =
@@ -102,6 +105,16 @@ export default function JobOfferList({
             </option>
           ))}
         </select>
+        <button
+          onClick={() => setFilterFavoris((v) => !v)}
+          className={`px-3 py-2 rounded-lg text-sm font-medium border transition ${
+            filterFavoris
+              ? "bg-yellow-50 border-yellow-400 text-yellow-700"
+              : "bg-white border-gray-300 text-gray-600 hover:border-yellow-400 hover:text-yellow-700"
+          }`}
+        >
+          {filterFavoris ? "★ Favoris" : "☆ Favoris"}
+        </button>
       </div>
 
       {/* Résultats */}
@@ -117,11 +130,16 @@ export default function JobOfferList({
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h2 className="font-semibold text-gray-900 text-base leading-tight">{offer.titre}</h2>
-                <span
-                  className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${STATUT_COLORS[offer.statut]}`}
-                >
-                  {STATUT_LABELS[offer.statut]}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {offer.favori && (
+                    <span aria-hidden="true" className="text-yellow-500 text-base leading-none select-none">★</span>
+                  )}
+                  <span
+                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUT_COLORS[offer.statut]}`}
+                  >
+                    {STATUT_LABELS[offer.statut]}
+                  </span>
+                </div>
               </div>
               <p className="text-sm text-gray-600 mb-1">
                 {offer.entreprise} · {offer.lieu}
