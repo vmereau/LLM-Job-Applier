@@ -55,7 +55,12 @@ export default function JobOfferList({
   const [filterFavoris, setFilterFavoris] = useState(false);
 
   const filtered = jobOffers.filter((o) => {
-    if (filterStatut && o.statut !== filterStatut) return false;
+    if (filterStatut) {
+      if (o.statut !== filterStatut) return false;
+    } else {
+      // Par défaut, masquer les offres ignorées
+      if (o.statut === "ignore") return false;
+    }
     if (filterProfile && o.profileId !== filterProfile) return false;
     if (filterFavoris && !o.favori) return false;
     if (filterText) {

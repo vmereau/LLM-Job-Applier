@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type StatutOffre = "nouveau" | "vu" | "repondu" | "ignore";
@@ -54,6 +54,17 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
   const [lettreError, setLettreError] = useState("");
   const [lettreSaving, setLettreSaving] = useState(false);
 
+  const [ignoreLoading, setIgnoreLoading] = useState(false);
+  const [ignoreError, setIgnoreError] = useState("");
+
+  // Passe automatiquement "nouveau" → "vu" à l'ouverture
+  useEffect(() => {
+    if (initial.statut === "nouveau") {
+      patch({ statut: "vu" }).then((updated) => setOffer(updated)).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function patch(data: Partial<{ statut: StatutOffre; favori: boolean; notes: string; lettreMotivation: string | null }>) {
     const res = await fetch(`/api/job-offers/${offer.id}`, {
       method: "PATCH",
@@ -92,6 +103,20 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
       setToggleError((e as Error).message);
     } finally {
       setToggleLoading(false);
+    }
+  }
+
+  async function handleToggleIgnore() {
+    setIgnoreError("");
+    setIgnoreLoading(true);
+    try {
+      const newStatut: StatutOffre = offer.statut === "ignore" ? "vu" : "ignore";
+      const updated = await patch({ statut: newStatut });
+      setOffer(updated);
+    } catch (e) {
+      setIgnoreError((e as Error).message);
+    } finally {
+      setIgnoreLoading(false);
     }
   }
 
@@ -258,6 +283,36 @@ export default function JobOfferDetail({ offer: initial }: { offer: JobOffer }) 
           </button>
         </div>
         {toggleError && <p className="text-red-600 text-xs mt-2">{toggleError}</p>}
+      </div>
+
+      {/* Ignorer */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-gray-900">Ignorer cette offre</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {offer.statut === "ignore"
+                ? "Cette offre est marquée comme ignorée."
+                : "Masquer cette offre sans y répondre."}
+            </p>
+          </div>
+          <button
+            onClick={handleToggleIgnore}
+            disabled={ignoreLoading}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              offer.statut === "ignore"
+                ? "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            } disabled:opacity-50`}
+          >
+            {ignoreLoading
+              ? "…"
+              : offer.statut === "ignore"
+              ? "Remettre en vue"
+              : "Ignorer"}
+          </button>
+        </div>
+        {ignoreError && <p className="text-red-600 text-xs mt-2">{ignoreError}</p>}
       </div>
 
       {/* Notes */}
