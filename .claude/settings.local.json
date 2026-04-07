@@ -20,7 +20,11 @@
       "WebFetch(domain:www.emplois-informatique.fr)",
       "Bash(curl:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:recrutements.cdigitallabs.com)",
+      "WebFetch(domain:www.hellowork.com)",
+      "WebFetch(domain:jobs.worldline.com)",
+      "Bash(python -c ':*)"
     ]
   }
 }

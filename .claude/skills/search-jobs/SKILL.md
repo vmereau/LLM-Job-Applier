@@ -96,13 +96,12 @@ Avant de sauvegarder, corriger les problèmes d'encodage dus aux pages en ISO-88
 
 ## Étape 5 — Sauvegarder les offres
 
-Pour chaque offre collectée, faire :
+Pour chaque offre collectée, utiliser un script Python qui gère correctement l'encodage UTF-8 (ne jamais passer du JSON avec des accents directement via `curl -d '...'` dans bash sur Windows — les caractères accentués seront corrompus en `\uFFFD`).
 
-```
-POST http://localhost:3000/api/job-offers
-Content-Type: application/json
+```python
+import json, urllib.request
 
-{
+offre = {
   "profileId": "<id du profil résolu à l'étape 2>",
   "titre": "...",
   "entreprise": "...",
@@ -110,12 +109,21 @@ Content-Type: application/json
   "description": "...",
   "lien": "...",
   "mots_cles": [...],
-  "salaire_min": 50000,   // optionnel
-  "salaire_max": 65000    // optionnel
+  # "salaire_min": 50000,  # optionnel
+  # "salaire_max": 65000   # optionnel
 }
+
+payload = json.dumps(offre, ensure_ascii=False).encode('utf-8')
+req = urllib.request.Request(
+    'http://localhost:3000/api/job-offers',
+    data=payload, method='POST',
+    headers={'Content-Type': 'application/json'}
+)
+with urllib.request.urlopen(req) as r:
+    resp = json.loads(r.read().decode('utf-8'))
 ```
 
-Si une requête POST échoue (status != 201), noter l'erreur mais continuer avec les offres suivantes.
+Regrouper toutes les offres dans un seul script Python et les POST en séquence. Si une requête échoue (exception ou status != 201), noter l'erreur mais continuer avec les offres suivantes.
 
 ## Étape 6 — Afficher le résumé
 
